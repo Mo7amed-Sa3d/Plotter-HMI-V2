@@ -1,0 +1,161 @@
+/* Colors */
+@define-color bg        #1C1C1C;
+@define-color bg_alt    #161616;
+@define-color surface   #2E2E2E;
+@define-color border    #3A3A3A;
+@define-color text      #E6E6E6;
+@define-color text_dim  #9A9A9A;
+@define-color primary   #E8A33D;
+@define-color primary_h #F0B355;
+@define-color danger    #C0392B;
+@define-color danger_h  #E0483A;
+@define-color success   #27AE60;
+@define-color success_h #2ECC71;
+
+window, .background {
+    background-color: @bg;
+    color: @text;
+}
+
+.title_bar {
+    background-color: @bg_alt;
+    border-bottom: 1px solid @border;
+}
+
+button {
+    background-color: @surface;
+    border: 1px solid @border;
+    border-radius: 10px;
+    color: @text;
+    font-size: 14px;
+    padding: 6px;
+}
+
+button:hover   { background-color: #383838; }
+button:active  { background-color: #242424; }
+
+button.primary {
+    background-color: @primary;
+    color: #1C1C1C;
+    font-weight: bold;
+    border: none;
+}
+button.primary:hover { background-color: @primary_h; }
+
+button.danger {
+    background-color: @danger;
+    color: #FFFFFF;
+    font-weight: bold;
+    border: none;
+}
+button.danger:hover { background-color: @danger_h; }
+
+button.success {
+    background-color: @success;
+    color: #FFFFFF;
+    font-weight: bold;
+    border: none;
+}
+button.success:hover { background-color: @success_h; }
+
+button.ghost {
+    background-color: transparent;
+    border: 1px solid @border;
+}
+
+label.title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #F0F0F0;
+}
+
+label.big {
+    font-size: 24px;
+    font-weight: bold;
+    color: #F0F0F0;
+}
+
+label.sub {
+    font-size: 13px;
+    color: @text_dim;
+}
+
+.group {
+    border: 1px solid @border;
+    border-radius: 10px;
+    padding: 8px;
+}
+
+.preview {
+    background-color: #151515;
+    border-radius: 10px;
+}
+
+progressbar {
+    min-height: 20px;
+}
+progressbar trough {
+    background-color: @surface;
+    border-radius: 8px;
+}
+progressbar progress {
+    background-color: @primary;
+    border-radius: 8px;
+}
+
+list {
+    background-color: #222222;
+    border: 1px solid @border;
+    border-radius: 10px;
+}
+list row {
+    padding: 10px;
+    border-bottom: 1px solid #2A2A2A;
+}
+list row:selected {
+    background-color: @primary;
+    color: #1C1C1C;
+}
+
+entry {
+    background-color: #222222;
+    border: 1px solid @border;
+    border-radius: 6px;
+    padding: 8px;
+    color: @text;
+}
+
+combobox button {
+    background-color: #222222;
+    border: 1px solid @border;
+    border-radius: 6px;
+    padding: 8px;
+    color: @text;
+}
+
+scale trough {
+    background-color: @surface;
+    border-radius: 4px;
+    min-height: 8px;
+}
+scale highlight {
+    background-color: @primary;
+    border-radius: 4px;
+}
+scale slider {
+    background-color: @primary;
+    border-radius: 12px;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+scrollbar {
+    background-color: @bg;
+    border: none;
+}
+scrollbar slider {
+    background-color: @border;
+    border-radius: 6px;
+    min-width: 10px;
+    min-height: 20px;
+}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Label Cutter HMI</title>
+<style>
+  * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+  body { margin: 0; background: #1c1c1c; color: #e6e6e6; }
+  header { background: #161616; padding: 16px; border-bottom: 1px solid #2a2a2a; }
+  h1 { margin: 0; font-size: 20px; color: #e8a33d; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; max-width: 1100px; margin: auto; }
+  .card { background: #262626; border: 1px solid #333; border-radius: 12px; padding: 16px; }
+  .row { display: flex; gap: 12px; margin-bottom: 12px; }
+  button { background: #2e2e2e; color: #e6e6e6; border: 1px solid #3a3a3a; border-radius: 10px; padding: 14px 18px; font-size: 15px; cursor: pointer; flex: 1; }
+  button:hover { background: #383838; }
+  button.primary { background: #e8a33d; color: #1c1c1c; border: none; font-weight: bold; }
+  button.danger { background: #c0392b; color: #fff; border: none; }
+  button.success { background: #27ae60; color: #fff; border: none; }
+  .jog { display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(3, 60px); gap: 8px; }
+  .jog button { padding: 0; font-size: 22px; }
+  .status { font-family: ui-monospace, monospace; white-space: pre-wrap; font-size: 13px; }
+  progress { width: 100%; height: 18px; }
+  input[type=range] { width: 100%; }
+  label { display: block; margin-bottom: 6px; color: #a0a0a0; font-size: 13px; }
+</style>
+</head>
+<body>
+<header><h1>Label Cutter HMI</h1></header>
+<main>
+  <section class="card">
+    <h2>Jog</h2>
+    <div class="jog">
+      <div></div>
+      <button onclick="jog(0,1)">▲</button>
+      <div></div>
+      <button onclick="jog(-1,0)">◀</button>
+      <button class="primary" onclick="home()">⌂</button>
+      <button onclick="jog(1,0)">▶</button>
+      <div></div>
+      <button onclick="jog(0,-1)">▼</button>
+      <div></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button onclick="zero()">Zero Origin</button>
+      <button onclick="feed(100)">Feed 100 mm</button>
+      <button onclick="eject()">Eject</button>
+    </div>
+    <div class="row">
+      <button class="danger" onclick="estop()">E-STOP</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Status</h2>
+    <div class="status" id="status">Loading…</div>
+  </section>
+
+  <section class="card">
+    <h2>Job</h2>
+    <div id="file">No file</div>
+    <progress id="bar" value="0" max="1"></progress>
+    <div class="row" style="margin-top:12px">
+      <button class="primary" onclick="pause()">Pause</button>
+      <button class="success" onclick="resume()">Resume</button>
+      <button class="danger" onclick="cancel()">Cancel</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Settings</h2>
+    <label>Speed: <span id="speedLabel">40</span> mm/s</label>
+    <input type="range" id="speed" min="1" max="200" value="40"
+           oninput="setSpeed(this.value)">
+    <label>Force P0: <span id="faLabel">0</span></label>
+    <input type="range" id="fa" min="0" max="255" value="0"
+           oninput="setForce(0, this.value)">
+    <label>Force P1: <span id="fbLabel">0</span></label>
+    <input type="range" id="fb" min="0" max="255" value="0"
+           oninput="setForce(1, this.value)">
+  </section>
+</main>
+<script>
+async function cmd(payload) {
+  await fetch('/api/command', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+}
+function jog(dx, dy) { cmd({cmd:'jog', x: dx, y: dy, f: 40}); }
+function home()      { cmd({cmd:'home'}); }
+function zero()      { cmd({cmd:'zero'}); }
+function estop()     { cmd({cmd:'stop'}); }
+function feed(mm)    { cmd({cmd:'feed', mm: mm, f: 20}); }
+function eject()     { cmd({cmd:'eject'}); }
+function pause()     { cmd({cmd:'pause'}); }
+function resume()    { cmd({cmd:'resume'}); }
+function cancel()    { cmd({cmd:'cancel'}); }
+function setSpeed(v) { document.getElementById('speedLabel').textContent = v;
+                       cmd({cmd:'speed', value: parseFloat(v)}); }
+function setForce(ch, v) {
+  document.getElementById(ch === '0' ? 'faLabel' : 'fbLabel').textContent = v;
+  cmd({cmd:'force', channel: parseInt(ch), duty: parseInt(v)});
+}
+
+async function poll() {
+  try {
+    const r = await fetch('/api/status');
+    const s = await r.json();
+    const p = s.position, sen = s.sensors, j = s.job;
+    document.getElementById('status').textContent =
+      (p ? `X=${p.x.toFixed(2)}  Y=${p.y.toFixed(2)}  QX=${p.qx.toFixed(2)}  QY=${p.qy.toFixed(2)}  Homed=${p.homed}\n` : '') +
+      (sen ? `S1=${+sen.s1}  S2=${+sen.s2}  S3=${+sen.s3}  XLIM=${+sen.x_limit}\n` : '') +
+      `State: ${j.state}\nProgress: ${(j.progress*100).toFixed(1)}%`;
+    document.getElementById('file').textContent = j.file || 'No file';
+    document.getElementById('bar').value = j.progress;
+    document.getElementById('speed').value = j.speed;
+    document.getElementById('speedLabel').textContent = j.speed;
+    document.getElementById('fa').value = j.force_a;
+    document.getElementById('faLabel').textContent = j.force_a;
+    document.getElementById('fb').value = j.force_b;
+    document.getElementById('fbLabel').textContent = j.force_b;
+  } catch (e) { /* ignore */ }
+}
+setInterval(poll, 1000);
+poll();
+</script>
+</body>
+</html>
