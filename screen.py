@@ -22,7 +22,7 @@ from ks_includes.KlippyGtk import KlippyGtk
 from machine import Machine
 from job import Job
 from web_server import start_server
-
+import logging
 
 class KlipperScreen(Gtk.Window):
     def __init__(self):
@@ -32,10 +32,29 @@ class KlipperScreen(Gtk.Window):
 
         # Fullscreen
         display = Gdk.Display.get_default()
-        monitor = display.get_primary_monitor()
-        geo = monitor.get_geometry()
-        self.width = geo.width
-        self.height = geo.height
+        monitor = None
+
+        if display is not None:
+            # Try the primary monitor first, then monitor 0 as a fallback.
+            monitor = display.get_primary_monitor()
+            if monitor is None:
+                try:
+                    monitor = display.get_monitor(0)
+                except Exception:
+                    monitor = None
+
+        if monitor is not None:
+            geo = monitor.get_geometry()
+            self.width = geo.width
+            self.height = geo.height
+        else:
+            # No monitor detected. Fall back to a sane default so the
+            # app still starts. The window will not be fullscreen, but
+            # the panels will render.
+            logging.warning("No monitor detected, using 480x800 default")
+            self.width = 480
+            self.height = 800
+
         self.fullscreen()
 
         # Widget factory
